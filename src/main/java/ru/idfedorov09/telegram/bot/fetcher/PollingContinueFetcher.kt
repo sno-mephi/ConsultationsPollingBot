@@ -51,8 +51,8 @@ class PollingContinueFetcher(
     private fun createChooseKeyboard() = createKeyboard(
         listOf(
             listOf(
-                InlineKeyboardButton("Да").also { it.callbackData = "yes" },
-                InlineKeyboardButton("Нет").also { it.callbackData = "no" },
+                InlineKeyboardButton("Да ✅").also { it.callbackData = "yes" },
+                InlineKeyboardButton("Нет ❌").also { it.callbackData = "no" },
             ),
         ),
     )
@@ -81,7 +81,7 @@ class PollingContinueFetcher(
             AnswerCallbackQuery().also {
                 it.showAlert = false
                 it.callbackQueryId = update.callbackQuery.id
-            }
+            },
         )
         val answer = update.callbackQuery.data
         val pollingResult = userPollingResultRepository.findByUserIdAndDate(chatId, pollDate) ?: return
@@ -101,7 +101,7 @@ class PollingContinueFetcher(
                 ),
             )
             bot.execute(
-                SendMessage(chatId, "Спасибо!"),
+                SendMessage(chatId, "Спасибо за ответ!"),
             )
             return
         } else {
@@ -110,7 +110,7 @@ class PollingContinueFetcher(
 
         val msg = SendMessage()
         msg.chatId = chatId
-        msg.text = "На сколько процентов вы поняли рассказанный материал?"
+        msg.text = "На сколько процентов вы поняли рассказанный материал? \uD83E\uDDE0"
         val keyboard = createShareKeyboard()
         msg.replyMarkup = keyboard
         bot.execute(msg)
@@ -128,7 +128,7 @@ class PollingContinueFetcher(
             AnswerCallbackQuery().also {
                 it.showAlert = false
                 it.callbackQueryId = update.callbackQuery.id
-            }
+            },
         )
         val percent = update.callbackQuery.data.toIntOrNull() ?: return
         // TODO: return? мб зарегать?) хотя странно. подумать
@@ -144,7 +144,7 @@ class PollingContinueFetcher(
             ),
         )
         bot.execute(
-            SendMessage(chatId, "Были ли на занятии моменты, которые вы поняли только сейчас?")
+            SendMessage(chatId, "Были ли на занятии моменты, которые вы поняли только сейчас? \uD83D\uDCA1")
                 .also { it.replyMarkup = createChooseKeyboard() },
         )
     }
@@ -161,7 +161,7 @@ class PollingContinueFetcher(
             AnswerCallbackQuery().also {
                 it.showAlert = false
                 it.callbackQueryId = update.callbackQuery.id
-            }
+            },
         )
         val answer = update.callbackQuery.data
         val pollingResult = userPollingResultRepository.findByUserIdAndDate(chatId, pollDate) ?: return
@@ -186,7 +186,7 @@ class PollingContinueFetcher(
 
         val msg = SendMessage()
         msg.chatId = chatId
-        msg.text = "Напишите свой комментарий по занятию"
+        msg.text = "Напишите свой комментарий по занятию \uD83D\uDCDD"
         bot.execute(msg)
     }
 
@@ -209,7 +209,7 @@ class PollingContinueFetcher(
         )
         val msg = SendMessage()
         msg.chatId = chatId
-        msg.text = "Спасибо за ответ!"
+        msg.text = "Спасибо за ответ! ✍"
         bot.execute(msg)
     }
 }
