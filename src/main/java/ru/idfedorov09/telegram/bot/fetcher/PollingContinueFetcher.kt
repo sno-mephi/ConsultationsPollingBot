@@ -110,7 +110,7 @@ class PollingContinueFetcher(
 
         val msg = SendMessage()
         msg.chatId = chatId
-        msg.text = "На сколько процентов вы поняли рассказанный материал? \uD83E\uDDE0"
+        msg.text = "На сколько процентов ты понял рассказанный материал? \uD83E\uDDE0"
         val keyboard = createShareKeyboard()
         msg.replyMarkup = keyboard
         bot.execute(msg)
@@ -144,7 +144,7 @@ class PollingContinueFetcher(
             ),
         )
         bot.execute(
-            SendMessage(chatId, "Были ли на занятии моменты, которые вы поняли только сейчас? \uD83D\uDCA1")
+            SendMessage(chatId, "Были ли на занятии моменты, которые ты понял только сейчас? \uD83D\uDCA1")
                 .also { it.replyMarkup = createChooseKeyboard() },
         )
     }
@@ -186,7 +186,8 @@ class PollingContinueFetcher(
 
         val msg = SendMessage()
         msg.chatId = chatId
-        msg.text = "Напишите свой комментарий по занятию \uD83D\uDCDD"
+        msg.text = "\uD83D\uDCDD Напиши свой комментарий по занятию, а также то, " +
+            "что тебе хотелось бы видеть на ближайшем занятии"
         bot.execute(msg)
     }
 
