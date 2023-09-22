@@ -36,7 +36,7 @@ class PollingContinueFetcher(
         val pollDate = redisService.getLastPollDate()
 
         when (user.currentQuestion) {
-            1 -> presenceStage()
+            1 -> presenceStage(update, chatId, bot, pollDate, user)
             2 -> understandingStage(update, chatId, pollDate, user)
             3 -> isNewKnowledgeStage()
             4 -> commentStage()
@@ -64,7 +64,54 @@ class PollingContinueFetcher(
         ),
     )
 
-    private fun presenceStage() {}
+    private fun createShareKeyboard() = createKeyboard(
+        listOf(
+            listOf(
+                InlineKeyboardButton("0").also { it.callbackData = "0" },
+                InlineKeyboardButton("25").also { it.callbackData = "25" },
+                InlineKeyboardButton("50").also { it.callbackData = "50" },
+                InlineKeyboardButton("75").also { it.callbackData = "75" },
+                InlineKeyboardButton("100").also { it.callbackData = "100" },
+            ),
+        ),
+    )
+
+    private fun presenceStage(
+        update: Update,
+        chatId: String,
+        bot: TelegramPollingBot,
+        pollDate: LocalDateTime,
+        user: User,
+    ) {
+        if (!update.hasCallbackQuery()) return
+        val answer = update.callbackQuery.data
+        val pollingResult = userPollingResultRepository.findByUserIdAndDate(chatId, pollDate) ?: return
+
+        if (answer == "yes") {
+            userRepository.save(user.copy(currentQuestion = 2))
+            userPollingResultRepository.save(
+                pollingResult.copy(
+                    presence = true
+                )
+            )
+        } else if (answer ==  "no"){
+            userRepository.save(user.copy(currentQuestion = 0))
+            userPollingResultRepository.save(
+                pollingResult.copy(
+                    presence = false
+                )
+            )
+        } else return
+
+        val msg = SendMessage()
+        msg.chatId = chatId
+        msg.text = "На сколько процентов вы все поняли?:"
+        val keyboard = createShareKeyboard()
+        msg.replyMarkup = keyboard
+        bot.execute(msg)
+        bot.execute(SendMessage(chatId, update.callbackQuery.data))
+
+    }
 
     private fun understandingStage(
         update: Update,
