@@ -19,7 +19,7 @@ data class User(
     val isAdmin: Boolean = false,
 
     // номер группы
-    @Column(name = "group", columnDefinition = "TEXT")
+    @Column(name = "study_group", columnDefinition = "TEXT")
     val group: String? = null,
 
     // текущий номер вопроса (0 - нет вопроса)

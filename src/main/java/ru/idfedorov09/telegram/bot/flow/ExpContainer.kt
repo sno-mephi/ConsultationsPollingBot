@@ -5,6 +5,7 @@ package ru.idfedorov09.telegram.bot.flow
  */
 @Mutable
 data class ExpContainer(
-    var allowAdminCommands: Boolean = false,
+    var allowSpecialCommands: Boolean = true,
+    var isValidCommand: Boolean = false,
     var isCurrentCommandByAdmin: Boolean = false
 )

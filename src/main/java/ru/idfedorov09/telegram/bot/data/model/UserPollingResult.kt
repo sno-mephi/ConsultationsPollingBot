@@ -14,7 +14,7 @@ data class UserPollingResult(
     @Column(name = "user_id")
     val userId: Long = -1,
 
-    @Column(name = "date")
+    @Column(name = "lesson_date")
     val date: LocalDateTime? = null,
 
     // присутствие
