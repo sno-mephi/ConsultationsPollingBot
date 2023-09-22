@@ -185,5 +185,9 @@ class PollingContinueFetcher(
                 comment = answer,
             ),
         )
+        val msg = SendMessage()
+        msg.chatId = chatId
+        msg.text = "Спасибо за ответ!"
+        bot.execute(msg)
     }
 }
