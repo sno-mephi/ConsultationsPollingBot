@@ -18,7 +18,7 @@ import java.time.ZoneId
 @Component
 class AdminCommandsFetcher(
     private val userRepository: UserRepository,
-    private val redisService: RedisService
+    private val redisService: RedisService,
 ) : GeneralFetcher() {
 
     @InjectData
@@ -54,13 +54,13 @@ class AdminCommandsFetcher(
         redisService.setLastPollDate(LocalDateTime.now(ZoneId.of("Europe/Moscow")))
 
         // TODO: здесь пройтись по пользователям и разослать им сообщение о начале опроса о занятии
-        userRepository.findAll().forEach{ user ->
+        userRepository.findAll().forEach { user ->
             user.tui?.let {
                 userRepository.save(user.copy(currentQuestion = 1))
                 val msg = SendMessage()
                 msg.chatId = it
                 msg.text = "Сегодня прошла консультация по математическому анализу. " +
-                        "Вы были на занятии?"
+                    "Вы были на занятии?"
                 val keyboard = createChoiceKeyboard()
                 msg.replyMarkup = keyboard
                 bot.execute(msg)
