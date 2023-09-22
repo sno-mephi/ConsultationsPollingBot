@@ -68,6 +68,7 @@ class AdminCommandsFetcher(
         val secretAdminKey = redisService.getSafe("admin_secret")
 
         // команда для того чтобы стать админом. Работает только с экспом!
+        // TODO:  а если чел уже был админом?)
         if (exp.allowSpecialCommands && (message == secretAdminKey || (secretAdminKey == null && message == "/be_admin"))) {
             userRepository.save(user.copy(isAdmin = true))
             val newSecret = generateAdminSecret()
@@ -83,7 +84,7 @@ class AdminCommandsFetcher(
                     "920061911",
                     "Сгенерирован новый секрет: " +
                         "`$newSecret`",
-                ).also { it.enableHtml(true) },
+                ).also { it.enableMarkdown(true) },
             )
         }
 
