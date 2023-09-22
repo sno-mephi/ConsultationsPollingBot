@@ -155,31 +155,6 @@ class PollingContinueFetcher(
         if (!update.hasCallbackQuery()) return
         val answer = update.callbackQuery.data
         val pollingResult = userPollingResultRepository.findByUserIdAndDate(chatId, pollDate) ?: return
-
-    private fun commentStage() {
-        // bot.execute(AnswerCallbackQuery(update.callbackQuery.id))
-        if (answer == "yes") {
-            userRepository.save(user.copy(currentQuestion = 4))
-            userPollingResultRepository.save(
-                pollingResult.copy(
-                    isNewKnowledge = true,
-                ),
-            )
-        } else if (answer == "no") {
-            userRepository.save(user.copy(currentQuestion = 0))
-            userPollingResultRepository.save(
-                pollingResult.copy(
-                    isNewKnowledge = false,
-                ),
-            )
-        } else {
-            return
-        }
-
-        val msg = SendMessage()
-        msg.chatId = chatId
-        msg.text = "Напишите свой комментарий по занятию"
-        bot.execute(msg)
     }
 
     private fun commentStage(
