@@ -4,6 +4,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import ru.idfedorov09.telegram.bot.fetcher.AdminCommandsFetcher
+import ru.idfedorov09.telegram.bot.fetcher.PollingContinueFetcher
 
 /**
  * Основной класс, в котором строится последовательность вычислений (граф)
@@ -23,11 +24,16 @@ open class FlowConfiguration() {
     @Autowired
     private lateinit var adminCommandsFetcher: AdminCommandsFetcher
 
+    @Autowired
+    private lateinit var pollingContinueFetcher: PollingContinueFetcher
+
     open fun FlowBuilder.buildFlow() {
         group {
             fetch(adminCommandsFetcher)
             // ветвь отвечающая за опрос. Админы не участвуют :)
-            whenComplete(condition = { !exp.isCurrentCommandByAdmin && exp.isValidCommand}) {
+            // TODO: прописать условия выполнения фетчера!
+            whenComplete() {
+                fetch(pollingContinueFetcher)
             }
         }
     }
