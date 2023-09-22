@@ -176,7 +176,7 @@ class PollingContinueFetcher(
         user: User,
     ) {
         if (!update.hasCallbackQuery()) return
-        val answer = update.callbackQuery.data
+        val answer = update.message.text
         val pollingResult = userPollingResultRepository.findByUserIdAndDate(chatId, pollDate) ?: return
         if (answer.isEmpty()) return
         userRepository.save(user.copy(currentQuestion = 0))
