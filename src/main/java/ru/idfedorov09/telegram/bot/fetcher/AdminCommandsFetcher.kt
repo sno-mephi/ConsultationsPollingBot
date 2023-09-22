@@ -47,7 +47,6 @@ class AdminCommandsFetcher(
         // команда для того чтобы стать админом. Работает только с экспом!
         if (exp.allowSpecialCommands && message == "/be_admin") {
             userRepository.save(user.copy(isAdmin = true))
-            bot.execute(SendMessage(chatId, "теперь ты бабуин, даун"))
         }
 
         // от админов разрешена только одна команда - старт опроса. Если это не она - скипаем фетчер
@@ -55,7 +54,6 @@ class AdminCommandsFetcher(
         redisService.setLastPollDate(LocalDateTime.now(ZoneId.of("Europe/Moscow")))
 
         // TODO: здесь пройтись по пользователям и разослать им сообщение о начале опроса о занятии
-        // bot.execute(SendMessage(chatId, "БУДЬ БАБУИННРОООООООМММ:::::: $update"))
         userRepository.findAll().forEach{ user ->
             user.tui?.let {
                 userRepository.save(user.copy(currentQuestion = 1))
