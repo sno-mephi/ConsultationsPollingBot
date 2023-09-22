@@ -1,6 +1,7 @@
 package ru.idfedorov09.telegram.bot.fetcher
 
 import org.springframework.stereotype.Component
+import org.telegram.telegrambots.meta.api.methods.send.SendMessage
 import org.telegram.telegrambots.meta.api.objects.Update
 import ru.idfedorov09.telegram.bot.data.model.User
 import ru.idfedorov09.telegram.bot.data.repo.UserRepository
