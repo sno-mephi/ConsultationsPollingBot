@@ -40,7 +40,7 @@ class PollingContinueFetcher(
             1 -> presenceStage(update, chatId, bot, pollDate, user)
             2 -> understandingStage(update, chatId, bot, pollDate, user)
             3 -> isNewKnowledgeStage(update, chatId, bot, pollDate, user)
-            4 -> commentStage(update, chatId, bot, pollDate, user)
+            4 -> commentStage(update, chatId, bot, pollDate, user, updatesUtil)
             else -> null
         }
     }
@@ -155,6 +155,29 @@ class PollingContinueFetcher(
         if (!update.hasCallbackQuery()) return
         val answer = update.callbackQuery.data
         val pollingResult = userPollingResultRepository.findByUserIdAndDate(chatId, pollDate) ?: return
+
+        if (answer == "yes") {
+            userRepository.save(user.copy(currentQuestion = 4))
+            userPollingResultRepository.save(
+                pollingResult.copy(
+                    isNewKnowledge = true,
+                ),
+            )
+        } else if (answer == "no") {
+            userRepository.save(user.copy(currentQuestion = 4))
+            userPollingResultRepository.save(
+                pollingResult.copy(
+                    isNewKnowledge = false,
+                ),
+            )
+        } else {
+            return
+        }
+
+        val msg = SendMessage()
+        msg.chatId = chatId
+        msg.text = "Напишите свой комментарий по занятию"
+        bot.execute(msg)
     }
 
     private fun commentStage(
@@ -163,11 +186,10 @@ class PollingContinueFetcher(
         bot: TelegramPollingBot,
         pollDate: LocalDateTime,
         user: User,
+        updatesUtil: UpdatesUtil,
     ) {
-        if (!update.hasCallbackQuery()) return
-        val answer = update.message.text
+        val answer = updatesUtil.getText(update) ?: return
         val pollingResult = userPollingResultRepository.findByUserIdAndDate(chatId, pollDate) ?: return
-        if (answer.isEmpty()) return
         userRepository.save(user.copy(currentQuestion = 0))
         userPollingResultRepository.save(
             pollingResult.copy(
