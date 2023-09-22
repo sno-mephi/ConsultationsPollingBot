@@ -12,7 +12,7 @@ data class UserPollingResult(
     val id: Long = -1,
 
     @Column(name = "user_id")
-    val userId: Long = -1,
+    val userId: String? = null,
 
     @Column(name = "lesson_date")
     val date: LocalDateTime? = null,
