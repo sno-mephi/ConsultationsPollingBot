@@ -102,7 +102,6 @@ class PollingContinueFetcher(
         } else {
             return
         }
-
         val msg = SendMessage()
         msg.chatId = chatId
         msg.text = "На сколько процентов вы поняли рассказанный материал?"
