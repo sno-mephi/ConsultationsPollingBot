@@ -85,7 +85,6 @@ class PollingContinueFetcher(
         )
         val answer = update.callbackQuery.data
         val pollingResult = userPollingResultRepository.findByUserIdAndDate(chatId, pollDate) ?: return
-
         if (answer == "yes") {
             userRepository.save(user.copy(currentQuestion = 2))
             userPollingResultRepository.save(
