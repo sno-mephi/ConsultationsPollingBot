@@ -1,6 +1,6 @@
 package ru.idfedorov09.telegram.bot.service
 
-import com.google.gson.Gson
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import redis.clients.jedis.Jedis
@@ -8,16 +8,20 @@ import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
 @Service
-class RedisService @Autowired constructor(private val jedis: Jedis, private val gson: Gson) {
+class RedisService @Autowired constructor(private val jedis: Jedis) {
 
     companion object {
-        val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
+        private val log = LoggerFactory.getLogger(this.javaClass)
+        private val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
     }
 
-    fun <T> getValue(key: String?, type: Class<T>?): T {
-        val jsonValue = jedis[key]
-        return gson.fromJson(jsonValue, type)
-    }
+    fun getSafe(key: String) =
+        try {
+            jedis.get(key)
+        } catch (e: NullPointerException) {
+            log.warn("Can't take value with key=$key from redis. Returning null")
+            null
+        }
 
     fun getValue(key: String?): String? {
         return jedis[key]
@@ -29,8 +33,8 @@ class RedisService @Autowired constructor(private val jedis: Jedis, private val 
 
     fun setLastPollDate(date: LocalDateTime) {
         val dateTimeStr = date.format(formatter)
-        jedis.set("last_poll_date", dateTimeStr)
+        jedis["last_poll_date"] = dateTimeStr
     }
 
-    fun getLastPollDate() = LocalDateTime.parse(jedis.get("last_poll_date"), formatter)
+    fun getLastPollDate() = LocalDateTime.parse(getSafe("last_poll_date") ?: "1800-02-22 00:00:00", formatter)
 }
