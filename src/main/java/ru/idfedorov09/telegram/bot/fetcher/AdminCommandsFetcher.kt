@@ -1,7 +1,10 @@
 package ru.idfedorov09.telegram.bot.fetcher
 
 import org.springframework.stereotype.Component
+import org.telegram.telegrambots.meta.api.methods.send.SendMessage
 import org.telegram.telegrambots.meta.api.objects.Update
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton
 import ru.idfedorov09.telegram.bot.data.model.User
 import ru.idfedorov09.telegram.bot.data.repo.UserRepository
 import ru.idfedorov09.telegram.bot.entity.TelegramPollingBot
@@ -40,11 +43,35 @@ class AdminCommandsFetcher(
         // команда для того чтобы стать админом. Работает только с экспом!
         if (exp.allowSpecialCommands && message == "/be_admin") {
             userRepository.save(user.copy(isAdmin = true))
+            bot.execute(SendMessage(chatId, "теперь ты бабуин, даун"))
         }
 
         // от админов разрешена только одна команда - старт опроса. Если это не она - скипаем фетчер
         if (message != "/poll") return
 
         // TODO: здесь пройтись по пользователям и разослать им сообщение о начале опроса о занятии
+        // bot.execute(SendMessage(chatId, "БУДЬ БАБУИННРОООООООМММ:::::: $update"))
+        userRepository.findAll().forEach{ user ->
+            user.tui?.let {
+                userRepository.save(user.copy(currentQuestion = 1))
+                val msg = SendMessage()
+                msg.chatId = it
+                msg.text = "Сегодня прошла консультация по математическому анализу. " +
+                        "Вы были на занятии?"
+                val keyboard = createChoiceKeyboard()
+                msg.replyMarkup = keyboard
+                bot.execute(msg)
+            }
+        }
+    }
+    private fun createChoiceKeyboard(): InlineKeyboardMarkup {
+        val keyboard = InlineKeyboardMarkup()
+        keyboard.keyboard = listOf(
+            listOf(
+                InlineKeyboardButton("Да").also { it.callbackData = "yes" },
+                InlineKeyboardButton("Нет").also { it.callbackData = "no" },
+            ),
+        )
+        return keyboard
     }
 }
