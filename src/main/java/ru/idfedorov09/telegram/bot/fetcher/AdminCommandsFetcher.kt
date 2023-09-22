@@ -107,7 +107,7 @@ class AdminCommandsFetcher(
                 )
                 val msg = SendMessage()
                 msg.chatId = it
-                msg.text = "Сегодня прошла консультация по математическому анализу. " +
+                msg.text = "\uD83D\uDCE3 Сегодня прошла консультация по математическому анализу.\n" +
                     "Вы были на занятии?"
                 val keyboard = createChoiceKeyboard()
                 msg.replyMarkup = keyboard
@@ -125,8 +125,8 @@ class AdminCommandsFetcher(
         val keyboard = InlineKeyboardMarkup()
         keyboard.keyboard = listOf(
             listOf(
-                InlineKeyboardButton("Да").also { it.callbackData = "yes" },
-                InlineKeyboardButton("Нет").also { it.callbackData = "no" },
+                InlineKeyboardButton("Да ✅").also { it.callbackData = "yes" },
+                InlineKeyboardButton("Нет ❌").also { it.callbackData = "no" },
             ),
         )
         return keyboard
