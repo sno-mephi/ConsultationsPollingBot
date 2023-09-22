@@ -10,6 +10,7 @@ import ru.idfedorov09.telegram.bot.flow.InjectData
 import ru.idfedorov09.telegram.bot.service.RedisService
 import ru.idfedorov09.telegram.bot.util.UpdatesUtil
 import java.time.LocalDateTime
+import java.time.ZoneId
 
 @Component
 class AdminCommandsFetcher(
@@ -47,7 +48,7 @@ class AdminCommandsFetcher(
 
         // от админов разрешена только одна команда - старт опроса. Если это не она - скипаем фетчер
         if (message != "/poll") return
-        redisService.setLastPollDate(LocalDateTime.now())
+        redisService.setLastPollDate(LocalDateTime.now(ZoneId.of("Europe/Moscow")))
 
         // TODO: здесь пройтись по пользователям и разослать им сообщение о начале опроса о занятии
     }
