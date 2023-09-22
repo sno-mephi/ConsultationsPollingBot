@@ -37,6 +37,24 @@ class AdminCommandsFetcher(
         val message = updatesUtil.getText(update)?.lowercase() ?: return
         val chatId = updatesUtil.getChatId(update) ?: return
 
+        if (message == "/start") {
+            userRepository.findByTui(chatId) ?: run {
+                bot.execute(
+                    SendMessage(
+                        chatId,
+                        "Привет! Это бот для обратной связи по консультациям " +
+                            "[Студенческого Научного Общества](https://sno.mephi.ru/) \uD83E\uDD16" +
+                            "Для того, чтобы мы могли сделать консультации лучше, пожалуйста, " +
+                            "зарегистрируйся, написав номер своей группы в том же формате, что и на home.mephi.ru, " +
+                            "например, Б23-105.",
+                    ).also {
+                        it.enableMarkdown(true)
+                    },
+                )
+            }
+            return
+        }
+
         // первое сообщение поьзователя обязательно должно быть текстовым - если нет, сохранение в бд не будет!
         val user = userRepository.findByTui(chatId) ?: User().also {
             if (!isCorrectStudyGroup(message)) {
