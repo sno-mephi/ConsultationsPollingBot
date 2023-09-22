@@ -6,6 +6,8 @@ import org.telegram.telegrambots.meta.api.objects.Update
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton
 import ru.idfedorov09.telegram.bot.data.model.User
+import ru.idfedorov09.telegram.bot.data.model.UserPollingResult
+import ru.idfedorov09.telegram.bot.data.repo.UserPollingResultRepository
 import ru.idfedorov09.telegram.bot.data.repo.UserRepository
 import ru.idfedorov09.telegram.bot.entity.TelegramPollingBot
 import ru.idfedorov09.telegram.bot.flow.ExpContainer
@@ -19,6 +21,7 @@ import java.time.ZoneId
 class AdminCommandsFetcher(
     private val userRepository: UserRepository,
     private val redisService: RedisService,
+    private val userPollingResultRepository: UserPollingResultRepository,
 ) : GeneralFetcher() {
 
     @InjectData
@@ -29,14 +32,31 @@ class AdminCommandsFetcher(
         exp: ExpContainer,
     ) {
         // админам можно взаимодействовать с ботом только через команды
+        // ПЕРВОЕ СООБЩЕНИЕ СОДЕРЖИТ НОМЕР ГРУППЫ
         val message = updatesUtil.getText(update)?.lowercase() ?: return
         val chatId = updatesUtil.getChatId(update) ?: return
 
         // первое сообщение поьзователя обязательно должно быть текстовым - если нет, сохранение в бд не будет!
         val user = userRepository.findByTui(chatId) ?: User().also {
+            if (!isCorrectStudyGroup(message)) {
+                bot.execute(
+                    SendMessage(
+                        chatId,
+                        "Вы еще не зарегистрированы. Пожалуйста, укажите корректный номер группы для регистрации.",
+                    ),
+                )
+                return
+            }
             userRepository.save(
                 it.copy(
                     tui = chatId,
+                    group = message,
+                ),
+            )
+            bot.execute(
+                SendMessage(
+                    chatId,
+                    "Вы успешно зарегистрированы!",
                 ),
             )
         }
@@ -51,12 +71,20 @@ class AdminCommandsFetcher(
 
         // от админов разрешена только одна команда - старт опроса. Если это не она - скипаем фетчер
         if (message != "/poll") return
-        redisService.setLastPollDate(LocalDateTime.now(ZoneId.of("Europe/Moscow")))
 
-        // TODO: здесь пройтись по пользователям и разослать им сообщение о начале опроса о занятии
+        var currentDate = LocalDateTime.now(ZoneId.of("Europe/Moscow"))
+        redisService.setLastPollDate(currentDate)
+        currentDate = redisService.getLastPollDate()
+
         userRepository.findAll().forEach { user ->
             user.tui?.let {
                 userRepository.save(user.copy(currentQuestion = 1))
+                userPollingResultRepository.save(
+                    UserPollingResult(
+                        userId = user.tui,
+                        date = currentDate,
+                    ),
+                )
                 val msg = SendMessage()
                 msg.chatId = it
                 msg.text = "Сегодня прошла консультация по математическому анализу. " +
@@ -67,6 +95,12 @@ class AdminCommandsFetcher(
             }
         }
     }
+
+    private fun isCorrectStudyGroup(input: String): Boolean {
+        val regex = Regex("[бс]23-\\d{3}")
+        return regex.matches(input)
+    }
+
     private fun createChoiceKeyboard(): InlineKeyboardMarkup {
         val keyboard = InlineKeyboardMarkup()
         keyboard.keyboard = listOf(

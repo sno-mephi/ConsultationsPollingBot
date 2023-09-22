@@ -1,6 +1,7 @@
 package ru.idfedorov09.telegram.bot.fetcher
 
 import org.springframework.stereotype.Component
+import org.telegram.telegrambots.meta.api.methods.AnswerCallbackQuery
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage
 import org.telegram.telegrambots.meta.api.objects.Update
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup
@@ -76,6 +77,12 @@ class PollingContinueFetcher(
         user: User,
     ) {
         if (!update.hasCallbackQuery()) return
+        bot.execute(
+            AnswerCallbackQuery().also {
+                it.callbackQueryId = update.callbackQuery.id
+                it.showAlert = false
+            },
+        )
         val answer = update.callbackQuery.data
         val pollingResult = userPollingResultRepository.findByUserIdAndDate(chatId, pollDate) ?: return
 
@@ -99,11 +106,10 @@ class PollingContinueFetcher(
 
         val msg = SendMessage()
         msg.chatId = chatId
-        msg.text = "На сколько процентов вы все поняли?:"
+        msg.text = "На сколько процентов вы поняли рассказанный материал?"
         val keyboard = createShareKeyboard()
         msg.replyMarkup = keyboard
         bot.execute(msg)
-        bot.execute(SendMessage(chatId, update.callbackQuery.data))
     }
 
     private fun understandingStage(
@@ -114,6 +120,12 @@ class PollingContinueFetcher(
         bot: TelegramPollingBot,
     ) {
         if (!update.hasCallbackQuery()) return
+        bot.execute(
+            AnswerCallbackQuery().also {
+                it.callbackQueryId = update.callbackQuery.id
+                it.showAlert = false
+            },
+        )
         val percent = update.callbackQuery.data.toIntOrNull() ?: return
         // TODO: return? мб зарегать?) хотя странно. подумать
         val pollingResult = userPollingResultRepository.findByUserIdAndDate(chatId, pollDate) ?: return
@@ -135,5 +147,7 @@ class PollingContinueFetcher(
 
     private fun isNewKnowledgeStage() {}
 
-    private fun commentStage() {}
+    private fun commentStage() {
+        // bot.execute(AnswerCallbackQuery(update.callbackQuery.id))
+    }
 }
