@@ -37,19 +37,11 @@ class PollingContinueFetcher(
 
         when (user.currentQuestion) {
             1 -> presenceStage(update, chatId, bot, pollDate, user)
-            2 -> understandingStage(update, chatId, pollDate, user)
+            2 -> understandingStage(update, chatId, pollDate, user, bot)
             3 -> isNewKnowledgeStage()
             4 -> commentStage()
             else -> null
         }
-
-        val testMsg = SendMessage()
-        testMsg.chatId = chatId
-        testMsg.text = "Выберите одну из кнопок:"
-        val keyboard = createChooseKeyboard()
-        testMsg.replyMarkup = keyboard
-        bot.execute(testMsg)
-        bot.execute(SendMessage(chatId, update.callbackQuery.data))
     }
 
     private fun createKeyboard(keyboard: List<List<InlineKeyboardButton>>) =
@@ -91,17 +83,19 @@ class PollingContinueFetcher(
             userRepository.save(user.copy(currentQuestion = 2))
             userPollingResultRepository.save(
                 pollingResult.copy(
-                    presence = true
-                )
+                    presence = true,
+                ),
             )
-        } else if (answer ==  "no"){
+        } else if (answer == "no") {
             userRepository.save(user.copy(currentQuestion = 0))
             userPollingResultRepository.save(
                 pollingResult.copy(
-                    presence = false
-                )
+                    presence = false,
+                ),
             )
-        } else return
+        } else {
+            return
+        }
 
         val msg = SendMessage()
         msg.chatId = chatId
@@ -110,7 +104,6 @@ class PollingContinueFetcher(
         msg.replyMarkup = keyboard
         bot.execute(msg)
         bot.execute(SendMessage(chatId, update.callbackQuery.data))
-
     }
 
     private fun understandingStage(
@@ -118,6 +111,7 @@ class PollingContinueFetcher(
         chatId: String,
         pollDate: LocalDateTime,
         user: User,
+        bot: TelegramPollingBot,
     ) {
         if (!update.hasCallbackQuery()) return
         val percent = update.callbackQuery.data.toIntOrNull() ?: return
@@ -130,10 +124,13 @@ class PollingContinueFetcher(
         )
         userRepository.save(
             user.copy(
-                currentQuestion = user.currentQuestion + 1,
+                currentQuestion = 3,
             ),
         )
-        // TODO: отправить следующее сообщение
+        bot.execute(
+            SendMessage(chatId, "Были ли на занятии моменты, которые вы поняли только сейчас?")
+                .also { it.replyMarkup = createChooseKeyboard() },
+        )
     }
 
     private fun isNewKnowledgeStage() {}
