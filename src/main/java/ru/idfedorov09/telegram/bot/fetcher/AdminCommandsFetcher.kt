@@ -25,6 +25,11 @@ class AdminCommandsFetcher(
     private val userPollingResultRepository: UserPollingResultRepository,
 ) : GeneralFetcher() {
 
+    companion object {
+        private const val firstPollMessage = "\uD83D\uDCE3 22.09.2023 прошла консультация по математическому анализу.\n" +
+            "Вы были на занятии?"
+    }
+
     @InjectData
     fun doFetch(
         update: Update,
@@ -125,8 +130,7 @@ class AdminCommandsFetcher(
                 )
                 val msg = SendMessage()
                 msg.chatId = it
-                msg.text = "\uD83D\uDCE3 Сегодня прошла консультация по математическому анализу.\n" +
-                    "Вы были на занятии?"
+                msg.text = firstPollMessage
                 val keyboard = createChoiceKeyboard()
                 msg.replyMarkup = keyboard
                 bot.execute(msg)
