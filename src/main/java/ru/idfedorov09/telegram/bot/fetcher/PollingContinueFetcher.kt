@@ -1,6 +1,7 @@
 package ru.idfedorov09.telegram.bot.fetcher
 
 import org.springframework.stereotype.Component
+import org.telegram.telegrambots.meta.api.methods.AnswerCallbackQuery
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage
 import org.telegram.telegrambots.meta.api.objects.Update
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup
@@ -39,7 +40,7 @@ class PollingContinueFetcher(
             1 -> presenceStage(update, chatId, bot, pollDate, user)
             2 -> understandingStage(update, chatId, bot, pollDate, user)
             3 -> isNewKnowledgeStage(update, chatId, bot, pollDate, user)
-            4 -> commentStage(update, chatId, bot, pollDate, user)
+            4 -> commentStage(update, chatId, bot, pollDate, user, updatesUtil)
             else -> null
         }
     }
@@ -76,6 +77,12 @@ class PollingContinueFetcher(
         user: User,
     ) {
         if (!update.hasCallbackQuery()) return
+        bot.execute(
+            AnswerCallbackQuery().also {
+                it.showAlert = false
+                it.callbackQueryId = update.callbackQuery.id
+            }
+        )
         val answer = update.callbackQuery.data
         val pollingResult = userPollingResultRepository.findByUserIdAndDate(chatId, pollDate) ?: return
 
@@ -93,17 +100,20 @@ class PollingContinueFetcher(
                     presence = false,
                 ),
             )
+            bot.execute(
+                SendMessage(chatId, "Спасибо!"),
+            )
+            return
         } else {
             return
         }
 
         val msg = SendMessage()
         msg.chatId = chatId
-        msg.text = "На сколько процентов вы все поняли?:"
+        msg.text = "На сколько процентов вы поняли рассказанный материал?"
         val keyboard = createShareKeyboard()
         msg.replyMarkup = keyboard
         bot.execute(msg)
-        bot.execute(SendMessage(chatId, update.callbackQuery.data))
     }
 
     private fun understandingStage(
@@ -114,6 +124,12 @@ class PollingContinueFetcher(
         user: User,
     ) {
         if (!update.hasCallbackQuery()) return
+        bot.execute(
+            AnswerCallbackQuery().also {
+                it.showAlert = false
+                it.callbackQueryId = update.callbackQuery.id
+            }
+        )
         val percent = update.callbackQuery.data.toIntOrNull() ?: return
         // TODO: return? мб зарегать?) хотя странно. подумать
         val pollingResult = userPollingResultRepository.findByUserIdAndDate(chatId, pollDate) ?: return
@@ -141,6 +157,12 @@ class PollingContinueFetcher(
         user: User,
     ) {
         if (!update.hasCallbackQuery()) return
+        bot.execute(
+            AnswerCallbackQuery().also {
+                it.showAlert = false
+                it.callbackQueryId = update.callbackQuery.id
+            }
+        )
         val answer = update.callbackQuery.data
         val pollingResult = userPollingResultRepository.findByUserIdAndDate(chatId, pollDate) ?: return
 
@@ -152,7 +174,7 @@ class PollingContinueFetcher(
                 ),
             )
         } else if (answer == "no") {
-            userRepository.save(user.copy(currentQuestion = 0))
+            userRepository.save(user.copy(currentQuestion = 4))
             userPollingResultRepository.save(
                 pollingResult.copy(
                     isNewKnowledge = false,
@@ -174,11 +196,11 @@ class PollingContinueFetcher(
         bot: TelegramPollingBot,
         pollDate: LocalDateTime,
         user: User,
+        updatesUtil: UpdatesUtil,
     ) {
-        if (!update.hasCallbackQuery()) return
-        val answer = update.message.text
+        if (!update.hasMessage()) return
+        val answer = updatesUtil.getText(update) ?: return
         val pollingResult = userPollingResultRepository.findByUserIdAndDate(chatId, pollDate) ?: return
-        if (answer.isEmpty()) return
         userRepository.save(user.copy(currentQuestion = 0))
         userPollingResultRepository.save(
             pollingResult.copy(
