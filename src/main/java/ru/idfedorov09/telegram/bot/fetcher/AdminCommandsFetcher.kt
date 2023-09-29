@@ -26,7 +26,7 @@ class AdminCommandsFetcher(
 ) : GeneralFetcher() {
 
     companion object {
-        private const val firstPollMessage = "\uD83D\uDCE3 22.09.2023 прошла консультация по математическому анализу.\n" +
+        private const val firstPollMessage = "\uD83D\uDCE3 Сегодня прошла консультация по математическому анализу.\n" +
             "Вы были на занятии?"
     }
 
@@ -111,16 +111,35 @@ class AdminCommandsFetcher(
             )
         }
 
-        // от админов разрешена только одна команда - старт опроса. Если это не она - скипаем фетчер
-        if (message != "/poll") return
         if (!user.isAdmin) return
 
-        var currentDate = LocalDateTime.now(ZoneId.of("Europe/Moscow"))
+        var currentDate = redisService.getLastPollDate()
+
+        if (message == "/comments") {
+            userRepository.findAll()
+                .filter { it.tui != null }
+                .associateWith { userPollingResultRepository.findByUserIdAndDate(it.tui!!, currentDate) }
+                .filter { it.value?.comment != null }
+                .forEach { curUser ->
+                    bot.execute(
+                        SendMessage(
+                            chatId,
+                            "\uD83D\uDCDD Комментарий представителя группы `${curUser.key.group}` " +
+                                "по последнему занятию ($currentDate):\n${curUser.value?.comment}",
+                        ).also { it.enableMarkdown(true) },
+                    )
+                    Thread.sleep(200L)
+                }
+        }
+        if (message != "/poll") return
+
+        currentDate = LocalDateTime.now(ZoneId.of("Europe/Moscow"))
         redisService.setLastPollDate(currentDate)
         currentDate = redisService.getLastPollDate()
 
         userRepository.findAll().forEach { user ->
             user.tui?.let {
+                Thread.sleep(150L)
                 userRepository.save(user.copy(currentQuestion = 1))
                 userPollingResultRepository.save(
                     UserPollingResult(
